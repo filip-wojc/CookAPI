@@ -1,0 +1,31 @@
+services:
+  database:
+    image: postgres:latest
+    container_name: postgres-cook
+    environment:
+      POSTGRES_DB: CookDB
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      - cook-app
+  redis:
+    image: redis:latest
+    container_name: redis-cook
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    networks:
+      - cook-app
+
+networks:
+  cook-app:
+    driver: bridge
+
+volumes:
+  database:
+  redis:
