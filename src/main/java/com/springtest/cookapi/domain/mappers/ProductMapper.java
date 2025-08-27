@@ -9,7 +9,15 @@ import java.util.ArrayList;
 
 @Component
 public class ProductMapper {
-    public Product toEntity(CreateProductDto dto) {
+    public<T> Product toEntity(CreateProductDto dto) {
+        return new Product(
+                null,
+                dto.name(),
+                new ArrayList<>()
+        );
+    }
+
+    public Product toEntity(ProductDto dto) {
         return new Product(
                 null,
                 dto.name(),

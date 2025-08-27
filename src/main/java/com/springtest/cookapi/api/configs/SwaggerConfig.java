@@ -21,7 +21,7 @@ public class SwaggerConfig {
     }
 
     private Info getApiInfo() {
-        return new Info().title("Test spring").description("Swagger Documentation");
+        return new Info().title("Cook API").description("Swagger Documentation");
     }
 
     private SecurityScheme bearerAuth() {
