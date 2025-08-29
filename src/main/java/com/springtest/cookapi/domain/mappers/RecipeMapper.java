@@ -21,7 +21,8 @@ public class RecipeMapper {
                 dto.difficulty(),
                 dto.calories(),
                 dto.products().stream().map(productMapper::toEntity).toList(),
-                new ArrayList<>()
+                new ArrayList<>(),
+                null
         );
     }
 

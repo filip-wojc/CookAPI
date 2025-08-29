@@ -2,6 +2,7 @@ package com.springtest.cookapi.api;
 
 import com.springtest.cookapi.domain.exceptions.ExceptionResponse;
 import com.springtest.cookapi.domain.exceptions.NotFoundException;
+import com.springtest.cookapi.domain.exceptions.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -20,5 +21,11 @@ public class ExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleValidation(MethodArgumentNotValidException ex) {
         var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ExceptionResponse> handleValidation(UnauthorizedException ex) {
+        var response = new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }

@@ -6,6 +6,7 @@ import com.springtest.cookapi.domain.dtos.recipe.RecipeDto;
 import com.springtest.cookapi.domain.dtos.recipe.UpdateRecipeDto;
 import com.springtest.cookapi.domain.entities.Product;
 import com.springtest.cookapi.domain.entities.Recipe;
+import com.springtest.cookapi.domain.entities.User;
 import com.springtest.cookapi.domain.enums.SortBy;
 import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.domain.exceptions.NotFoundException;
@@ -14,8 +15,9 @@ import com.springtest.cookapi.domain.mappers.RecipeMapper;
 import com.springtest.cookapi.domain.requests.GetRecipesRequest;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
+import com.springtest.cookapi.infrastructure.repositories.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -30,17 +32,25 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RecipeServiceImpl implements IRecipeService{
     private final RecipeRepository recipeRepository;
     private final ProductRepository productRepository;
     private final RecipeMapper recipeMapper;
     private final ProductMapper productMapper;
+    private final CurrentUserService currentUserService;
+    private final UserRepository userRepository;
 
     @Transactional
     @CacheEvict(value = "all-recipes", key = "'recipes_list'")
     public void addRecipe(CreateRecipeDto createRecipeDto) {
         Recipe recipe = recipeMapper.toRecipe(createRecipeDto);
+
+        var currentUserId = currentUserService.getCurrentUserId();
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with ID: " + currentUserId));;
+
+        recipe.setUser(currentUser);
+
         List<Product> productsFromRecipe = recipe.getProductList();
         var products = addNotExistingProducts(productsFromRecipe);
         recipe.setProductList(products);
