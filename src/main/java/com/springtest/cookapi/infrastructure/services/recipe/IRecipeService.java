@@ -1,4 +1,4 @@
-package com.springtest.cookapi.infrastructure.services;
+package com.springtest.cookapi.infrastructure.services.recipe;
 
 import com.springtest.cookapi.domain.dtos.recipe.CreateRecipeDto;
 import com.springtest.cookapi.domain.dtos.recipe.RecipeDto;
@@ -11,5 +11,6 @@ public interface IRecipeService {
     void addRecipe(CreateRecipeDto createRecipeDto);
     void deleteRecipe(Long recipeId);
     List<RecipeDto> getAllRecipes(GetRecipesRequest getRecipesRequest);
+    RecipeDto getRecipeDtoById(Long recipeId);
     void updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto);
 }

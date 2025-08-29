@@ -30,4 +30,8 @@ public class Review {
     @ManyToOne()
     @JoinColumn(name = "recipe_id", nullable = false)
     private Recipe recipe;
+
+    @ManyToOne()
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

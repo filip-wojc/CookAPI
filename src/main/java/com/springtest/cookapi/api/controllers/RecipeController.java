@@ -6,7 +6,8 @@ import com.springtest.cookapi.domain.dtos.recipe.UpdateRecipeDto;
 import com.springtest.cookapi.domain.enums.SortBy;
 import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.domain.requests.GetRecipesRequest;
-import com.springtest.cookapi.infrastructure.services.RecipeServiceImpl;
+import com.springtest.cookapi.infrastructure.services.recipe.IRecipeService;
+import com.springtest.cookapi.infrastructure.services.recipe.RecipeServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -20,11 +21,16 @@ import java.util.List;
 @RequestMapping("/api/recipe")
 @RequiredArgsConstructor
 public class RecipeController {
-    private final RecipeServiceImpl recipeService;
+    private final IRecipeService recipeService;
 
     @GetMapping
     public ResponseEntity<List<RecipeDto>> getAllRecipes(@RequestParam SortBy sortBy, @RequestParam SortDirection sortDirection, @RequestParam @Min(1) @Max(50) Integer limit) {
         return ResponseEntity.ok(recipeService.getAllRecipes(new GetRecipesRequest(sortBy, sortDirection, limit)));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RecipeDto> getRecipeById(@PathVariable Long id) {
+        return ResponseEntity.ok(recipeService.getRecipeDtoById(id));
     }
 
     @PostMapping

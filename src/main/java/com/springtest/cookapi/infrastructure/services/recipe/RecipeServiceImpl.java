@@ -1,5 +1,5 @@
 
-package com.springtest.cookapi.infrastructure.services;
+package com.springtest.cookapi.infrastructure.services.recipe;
 
 import com.springtest.cookapi.domain.dtos.recipe.CreateRecipeDto;
 import com.springtest.cookapi.domain.dtos.recipe.RecipeDto;
@@ -9,6 +9,7 @@ import com.springtest.cookapi.domain.entities.Recipe;
 import com.springtest.cookapi.domain.entities.User;
 import com.springtest.cookapi.domain.enums.SortBy;
 import com.springtest.cookapi.domain.enums.SortDirection;
+import com.springtest.cookapi.domain.exceptions.ForbiddenException;
 import com.springtest.cookapi.domain.exceptions.NotFoundException;
 import com.springtest.cookapi.domain.mappers.ProductMapper;
 import com.springtest.cookapi.domain.mappers.RecipeMapper;
@@ -16,15 +17,16 @@ import com.springtest.cookapi.domain.requests.GetRecipesRequest;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
+import com.springtest.cookapi.infrastructure.services.CurrentUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,13 +43,14 @@ public class RecipeServiceImpl implements IRecipeService{
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
 
+    @Override
     @Transactional
-    @CacheEvict(value = "all-recipes", key = "'recipes_list'")
+    @CacheEvict(value = "all-recipes", allEntries = true)
     public void addRecipe(CreateRecipeDto createRecipeDto) {
         Recipe recipe = recipeMapper.toRecipe(createRecipeDto);
 
         var currentUserId = currentUserService.getCurrentUserId();
-        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with ID: " + currentUserId));;
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found with ID: " + currentUserId));
 
         recipe.setUser(currentUser);
 
@@ -57,15 +60,26 @@ public class RecipeServiceImpl implements IRecipeService{
         recipeRepository.save(recipe);
     }
 
+    @Override
     @Transactional
-    @CacheEvict(value = "all-recipes", key = "'recipes_list'")
+    @Caching(evict = {
+            @CacheEvict(value = "all-recipes", allEntries = true),
+            @CacheEvict(value = "recipe", key = "'recipe_' + #recipeId.toString()")
+    })
     public void deleteRecipe(Long recipeId) {
-        getRecipeById(recipeId);
+        var recipeToDelete = getRecipeById(recipeId);
+
+        var currentUserId = currentUserService.getCurrentUserId();
+        if (!currentUserId.equals(recipeToDelete.getUser().getId())) {
+            throw new ForbiddenException("You are not allowed to delete this recipe");
+        }
+
         recipeRepository.deleteById(recipeId);
     }
 
 
 
+    @Override
     @Cacheable(value = "all-recipes", key = "#getRecipesRequest.toString()")
     public List<RecipeDto> getAllRecipes(GetRecipesRequest  getRecipesRequest) {
 
@@ -79,15 +93,22 @@ public class RecipeServiceImpl implements IRecipeService{
         );
 
         var recipes = recipeRepository.findAll(pageRequest);
-        var recipeDtos = recipes.stream().map(recipeMapper::toRecipeDto).collect(Collectors.toList());
-        return recipeDtos;
-
+        return recipes.stream().map(recipeMapper::toRecipeDto).collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
-    @CacheEvict(value = "all-recipes", key = "'recipes_list'")
+    @Caching(evict = {
+            @CacheEvict(value = "all-recipes", allEntries = true),
+            @CacheEvict(value = "recipe", key = "'recipe_' + #recipeId.toString()")
+    })
     public void updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto) {
         var recipeToModify = getRecipeById(recipeId);
+
+        var currentUserId = currentUserService.getCurrentUserId();
+        if (!currentUserId.equals(recipeToModify.getUser().getId())) {
+            throw new ForbiddenException("You are not allowed to modify this recipe");
+        }
 
         if (updateRecipeDto.name() != null) {
             recipeToModify.setName(updateRecipeDto.name());
@@ -109,6 +130,13 @@ public class RecipeServiceImpl implements IRecipeService{
 
         recipeRepository.save(recipeToModify);
 
+    }
+
+    @Override
+    @Cacheable(value = "recipe", key = "'recipe_' + #recipeId.toString()")
+    public RecipeDto getRecipeDtoById(Long recipeId) {
+        var recipe = getRecipeById(recipeId);
+        return recipeMapper.toRecipeDto(recipe);
     }
 
 
