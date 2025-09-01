@@ -19,18 +19,18 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleValidation(MethodArgumentNotValidException ex) {
-        var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage().substring(ex.getMessage().lastIndexOf('[') + 1, ex.getMessage().lastIndexOf(']') - 1));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ExceptionResponse> handleValidation(UnauthorizedException ex) {
+    public ResponseEntity<ExceptionResponse> handleUnauthorized(UnauthorizedException ex) {
         var response = new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ExceptionResponse> handleValidation(ForbiddenException ex) {
+    public ResponseEntity<ExceptionResponse> handleForbidden(ForbiddenException ex) {
         var response = new ExceptionResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }

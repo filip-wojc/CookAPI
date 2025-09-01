@@ -80,9 +80,6 @@ public class AuthService {
             throw new IllegalArgumentException("User not found");
         }
 
-
-
-
         UsernamePasswordAuthenticationToken auth =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         String accessToken = jwtService.generateAccessToken(auth, userId);
