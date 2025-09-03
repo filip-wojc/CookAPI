@@ -123,8 +123,8 @@ public class RecipeServiceIntegrationTests {
     @WithUserDetails("test_user")
     void createRecipeShouldBeSuccessful() {
         var recipe = recipeService.addRecipe(this.createRecipeDto);
-        Assertions.assertThat(recipe.getId()).isNotNull();
-        Assertions.assertThat(recipe.getName()).isEqualTo("test1");
+        Assertions.assertThat(recipe.id()).isNotNull();
+        Assertions.assertThat(recipe.name()).isEqualTo("test1");
     }
 
 }

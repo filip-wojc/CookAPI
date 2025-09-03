@@ -13,6 +13,7 @@ import java.util.ArrayList;
 public class RecipeMapper {
 
     private final ProductMapper productMapper;
+    private final UserMapper userMapper;
     public Recipe toRecipe(CreateRecipeDto dto) {
         return new Recipe(
                 null,
@@ -33,7 +34,8 @@ public class RecipeMapper {
                 recipe.getDescription(),
                 recipe.getDifficulty().toString(),
                 recipe.getCalories(),
-                recipe.getProductList().stream().map(productMapper::toDto).toList()
+                recipe.getProductList().stream().map(productMapper::toDto).toList(),
+                userMapper.toUserDto(recipe.getUser())
         );
     }
 }

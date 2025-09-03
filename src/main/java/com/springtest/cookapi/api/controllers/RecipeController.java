@@ -14,7 +14,10 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -34,15 +37,21 @@ public class RecipeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addRecipe(@Valid @RequestBody CreateRecipeDto recipeDto){
-        recipeService.addRecipe(recipeDto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<RecipeDto> addRecipe(@Valid @RequestBody CreateRecipeDto recipeDto){
+        var addedRecipe = recipeService.addRecipe(recipeDto);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(addedRecipe.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(addedRecipe);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @Valid @RequestBody UpdateRecipeDto updateRecipeDto){
-        recipeService.updateRecipe(id, updateRecipeDto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<RecipeDto> updateRecipe(@PathVariable Long id, @Valid @RequestBody UpdateRecipeDto updateRecipeDto){
+        var updatedRecipe = recipeService.updateRecipe(id, updateRecipeDto);
+        return ResponseEntity.ok(updatedRecipe);
     }
 
     @DeleteMapping("/{id}")

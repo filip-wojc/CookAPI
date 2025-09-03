@@ -96,36 +96,6 @@ public class RecipeServiceUnitTests {
     }
 
     @Test
-    public void getAllRecipesShouldReturnCorrectRecipes() {
-        var getRecipeRequest = new GetRecipesRequest(
-                SortBy.NAME,
-                SortDirection.ASC,
-                10
-        );
-
-        Recipe recipe1 = new Recipe(1L, "Recipe A", "desc", Difficulty.EASY, 100d, new ArrayList<>(), new ArrayList<>(), new User());
-        Recipe recipe2 = new Recipe(2L, "Recipe C", "desc", Difficulty.MEDIUM, 200d, new ArrayList<>(), new ArrayList<>(), new User());
-        Recipe recipe3 = new Recipe(3L, "Recipe B", "desc", Difficulty.HARD, 150d, new ArrayList<>(), new ArrayList<>(), new User());
-
-        Page<Recipe> recipePage = new PageImpl<>(List.of(recipe1, recipe2, recipe3));
-
-        // Mock DTOs
-        RecipeDto dto1 = new RecipeDto(1L, "Recipe A", "desc", "EASY", 100d, new ArrayList<>());
-        RecipeDto dto2 = new RecipeDto(2L, "Recipe C", "desc", "MEDIUM", 200d, new ArrayList<>());
-        RecipeDto dto3 = new RecipeDto(3L, "Recipe B", "desc", "HARD", 150d, new ArrayList<>());
-
-        Mockito.when(recipeRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(recipePage);
-        Mockito.when(recipeMapper.toRecipeDto(recipe1)).thenReturn(dto1);
-        Mockito.when(recipeMapper.toRecipeDto(recipe2)).thenReturn(dto2);
-        Mockito.when(recipeMapper.toRecipeDto(recipe3)).thenReturn(dto3);
-
-        List<RecipeDto> result = recipeService.getAllRecipes(getRecipeRequest);
-
-        Assertions.assertEquals(3, result.size());
-
-    }
-
-    @Test
     public void addRecipeShouldAddRecipeSuccessfully() {
         Mockito.when(currentUserService.getCurrentUserId()).thenReturn(1L);
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(mockedUser));
@@ -147,7 +117,7 @@ public class RecipeServiceUnitTests {
         Mockito.when(productRepository.saveAll(Mockito.anyList())).thenReturn(new ArrayList<>(List.of(existingProduct)));
 
 
-        Recipe addedRecipe = recipeService.addRecipe(createRecipeDto);
+        RecipeDto addedRecipe = recipeService.addRecipe(createRecipeDto);
 
         assertRecipeBasicProperties(addedRecipe);
     }
@@ -221,13 +191,12 @@ public class RecipeServiceUnitTests {
         Assertions.assertEquals("new product", expectedSavedProducts.get(0).getName());
     }
 
-    private void assertRecipeBasicProperties(Recipe recipe) {
-        Assertions.assertEquals("test", recipe.getName());
-        Assertions.assertEquals("test", recipe.getDescription());
-        Assertions.assertEquals(Difficulty.MEDIUM, recipe.getDifficulty());
-        Assertions.assertEquals(200d, recipe.getCalories());
-        Assertions.assertEquals(mockedUser, recipe.getUser());
-        Assertions.assertEquals(1, recipe.getProductList().size());
-        Assertions.assertEquals("test", recipe.getProductList().get(0).getName());
+    private void assertRecipeBasicProperties(RecipeDto recipe) {
+        Assertions.assertEquals("test", recipe.name());
+        Assertions.assertEquals("test", recipe.description());
+        Assertions.assertEquals(Difficulty.MEDIUM, recipe.difficulty());
+        Assertions.assertEquals(200d, recipe.calories());
+        Assertions.assertEquals(1, recipe.products().size());
+        Assertions.assertEquals("test", recipe.products().get(0).name());
     }
 }

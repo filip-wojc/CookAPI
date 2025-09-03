@@ -1,6 +1,7 @@
 package com.springtest.cookapi.domain.dtos.recipe;
 
 import com.springtest.cookapi.domain.dtos.product.ProductDto;
+import com.springtest.cookapi.domain.dtos.user.UserDto;
 import com.springtest.cookapi.domain.entities.Review;
 
 import java.io.Serializable;
@@ -12,7 +13,8 @@ public record RecipeDto (
     String description,
     String difficulty,
     Double calories,
-    List<ProductDto> products
+    List<ProductDto> products,
+    UserDto author
 ) implements Serializable{
     private static final long serialVersionUID = 1L;
 }

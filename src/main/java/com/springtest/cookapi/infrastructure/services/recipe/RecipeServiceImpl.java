@@ -46,7 +46,7 @@ public class RecipeServiceImpl implements IRecipeService{
     @Override
     @Transactional
     @CacheEvict(value = "all-recipes", allEntries = true)
-    public Recipe addRecipe(CreateRecipeDto createRecipeDto) {
+    public RecipeDto addRecipe(CreateRecipeDto createRecipeDto) {
         Recipe recipe = recipeMapper.toRecipe(createRecipeDto);
 
         var currentUserId = currentUserService.getCurrentUserId();
@@ -57,7 +57,9 @@ public class RecipeServiceImpl implements IRecipeService{
         List<Product> productsFromRecipe = recipe.getProductList();
         var products = addNotExistingProducts(productsFromRecipe);
         recipe.setProductList(products);
-        return recipeRepository.save(recipe);
+        var savedRecipe = recipeRepository.save(recipe);
+
+        return recipeMapper.toRecipeDto(savedRecipe);
     }
 
     @Override
@@ -102,7 +104,7 @@ public class RecipeServiceImpl implements IRecipeService{
             @CacheEvict(value = "all-recipes", allEntries = true),
             @CacheEvict(value = "recipe", key = "'recipe_' + #recipeId.toString()")
     })
-    public void updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto) {
+    public RecipeDto updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto) {
         var recipeToModify = getRecipeById(recipeId);
 
         var currentUserId = currentUserService.getCurrentUserId();
@@ -128,8 +130,8 @@ public class RecipeServiceImpl implements IRecipeService{
             recipeToModify.setProductList(managedProducts);
         }
 
-        recipeRepository.save(recipeToModify);
-
+        var savedRecipe = recipeRepository.save(recipeToModify);
+        return recipeMapper.toRecipeDto(savedRecipe);
     }
 
     @Override

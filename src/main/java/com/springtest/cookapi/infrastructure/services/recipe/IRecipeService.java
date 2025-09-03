@@ -9,9 +9,9 @@ import com.springtest.cookapi.domain.requests.GetRecipesRequest;
 import java.util.List;
 
 public interface IRecipeService {
-    Recipe addRecipe(CreateRecipeDto createRecipeDto);
+    RecipeDto addRecipe(CreateRecipeDto createRecipeDto);
     void deleteRecipe(Long recipeId);
     List<RecipeDto> getAllRecipes(GetRecipesRequest getRecipesRequest);
     RecipeDto getRecipeDtoById(Long recipeId);
-    void updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto);
+    RecipeDto updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto);
 }
