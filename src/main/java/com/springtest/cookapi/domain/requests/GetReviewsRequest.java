@@ -20,4 +20,8 @@ public record GetReviewsRequest (
             limit = 10;
         }
     }
+
+    public String toString() {
+        return sortDirection.toString() + " " + pageNumber + " " + limit;
+    }
 }

@@ -61,7 +61,7 @@ public class ReviewServiceImpl implements IReviewService {
     }
 
     @Override
-    @Cacheable(value = "all-reviews", key = "'reviews' + #recipeId")
+    @Cacheable(value = "all-reviews", key = "'reviews' + #recipeId + ' ' + #getReviewsRequest.toString()")
     public PageResponse<ReviewDto> getReviews(Long recipeId, GetReviewsRequest getReviewsRequest) {
         var recipe = getRecipeById(recipeId);
 

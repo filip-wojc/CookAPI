@@ -22,12 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
@@ -109,6 +105,7 @@ public class RecipeControllerTest {
                 .param("sortBy", SortBy.CALORIES.toString())
                 .param("sortDirection", SortDirection.ASC.toString())
                 .param("limit", "5")
+                        .param("pageNumber", "0")
         )
                 .andExpect(status().isOk());
     }
@@ -120,6 +117,7 @@ public class RecipeControllerTest {
                         .param("sortDirection", SortDirection.ASC.toString())
                         // exceeded max limit
                         .param("limit", "51")
+                        .param("pageNumber", "0")
                 )
                 .andExpect(status().isBadRequest());
     }
@@ -130,12 +128,13 @@ public class RecipeControllerTest {
                         .param("sortBy", SortBy.CALORIES.toString())
                         .param("sortDirection", SortDirection.ASC.toString())
                         .param("limit", "5")
+                        .param("pageNumber", "0")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
-                .andExpect(jsonPath("$[0].calories", is(150d)))
-                .andExpect(jsonPath("$[0].products", hasSize(2)))
-                .andExpect(jsonPath("$[0].products[0].name", is("product3")));
+                .andExpect(jsonPath("$.content", hasSize(5)))
+                .andExpect(jsonPath("$.content[0].calories", is(150d)))
+                .andExpect(jsonPath("$.content[0].products", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].products[0].name", is("product3")));
     }
 
     @Test
@@ -144,24 +143,25 @@ public class RecipeControllerTest {
                         .param("sortBy", SortBy.CALORIES.toString())
                         .param("sortDirection", SortDirection.DESC.toString())
                         .param("limit", "5")
+                        .param("pageNumber", "0")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)))
-                .andExpect(jsonPath("$[4].calories", is(150d)))
-                .andExpect(jsonPath("$[4].products", hasSize(2)))
-                .andExpect(jsonPath("$[4].products[0].name", is("product3")));
+                .andExpect(jsonPath("$.content", hasSize(5)))
+                .andExpect(jsonPath("$.content[4].calories", is(150d)))
+                .andExpect(jsonPath("$.content[4].products", hasSize(2)))
+                .andExpect(jsonPath("$.content[4].products[0].name", is("product3")));
     }
 
 
     @Test
     @WithUserDetails("test_user")
     void getAllRecipesShouldCacheResults() throws Exception {
-        String cacheKey = "all-recipes::CALORIES ASC 5";
+        String cacheKey = "all-recipes::CALORIES ASC 5 0";
         stringRedisTemplate.delete(cacheKey);
 
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
 
-        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5&pageNumber=0"));
 
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isTrue();
 
@@ -181,17 +181,16 @@ public class RecipeControllerTest {
     }
 
     @Test
-    @WithUserDetails("test_user")
     void getAllRecipesShouldUseRedisCache() throws Exception {
-        String cacheKey = "all-recipes::CALORIES ASC 5";
+        String cacheKey = "all-recipes::CALORIES ASC 5 0";
         stringRedisTemplate.delete(cacheKey);
 
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
 
-        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5&pageNumber=0"));
         String firstValue = stringRedisTemplate.opsForValue().get(cacheKey);
 
-        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5&pageNumber=0"));
         String secondValue = stringRedisTemplate.opsForValue().get(cacheKey);
 
 
@@ -199,20 +198,19 @@ public class RecipeControllerTest {
     }
 
     @Test
-    @WithUserDetails("test_user")
     void shouldBeFasterFromCache() throws Exception {
-        String cacheKey = "all-recipes::CALORIES ASC 5";
+        String cacheKey = "all-recipes::CALORIES ASC 5 0";
         stringRedisTemplate.delete(cacheKey);
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
 
         long start =  System.currentTimeMillis();
-        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5&pageNumber=0"));
         long databaseQueryTime = System.currentTimeMillis() - start;
 
         System.out.println("Database query time: " + databaseQueryTime);
 
         start = System.currentTimeMillis();
-        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5&pageNumber=0"));
         long cacheQueryTime = System.currentTimeMillis() - start;
 
         System.out.println("Cache query time: " + cacheQueryTime);

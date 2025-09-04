@@ -26,6 +26,6 @@ public record GetRecipesRequest (
 
     public String toString()
     {
-        return sortBy.toString() + " " + sortDirection.toString() + " " + limit + " " + pageNumber;
+        return sortBy.toString() + " " + sortDirection.toString() + " " + pageNumber + " " + limit;
     }
 }
