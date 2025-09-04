@@ -154,7 +154,8 @@ public class RecipeControllerTest {
 
 
     @Test
-    void getAllRecipesShouldUseRedisCache() throws Exception {
+    @WithUserDetails("test_user")
+    void getAllRecipesShouldCacheResults() throws Exception {
         String cacheKey = "all-recipes::CALORIES ASC 5";
         stringRedisTemplate.delete(cacheKey);
 
@@ -163,6 +164,60 @@ public class RecipeControllerTest {
         mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
 
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isTrue();
+
+        var createProductsDto = List.of(
+                new CreateProductDto("test_pro1"),
+                new CreateProductDto("test_pro2"),
+                new CreateProductDto("test_pro3")
+        );
+        var createRecipeDto = new CreateRecipeDto("test1", "test_d1", Difficulty.MEDIUM, 200d, createProductsDto);
+
+        mockMvc.perform(post("/api/recipe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRecipeDto))
+        ).andExpect(status().isCreated());
+
+        assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
+    }
+
+    @Test
+    @WithUserDetails("test_user")
+    void getAllRecipesShouldUseRedisCache() throws Exception {
+        String cacheKey = "all-recipes::CALORIES ASC 5";
+        stringRedisTemplate.delete(cacheKey);
+
+        assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
+
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        String firstValue = stringRedisTemplate.opsForValue().get(cacheKey);
+
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        String secondValue = stringRedisTemplate.opsForValue().get(cacheKey);
+
+
+        assertThat(firstValue).isEqualTo(secondValue);
+    }
+
+    @Test
+    @WithUserDetails("test_user")
+    void shouldBeFasterFromCache() throws Exception {
+        String cacheKey = "all-recipes::CALORIES ASC 5";
+        stringRedisTemplate.delete(cacheKey);
+        assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
+
+        long start =  System.currentTimeMillis();
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        long databaseQueryTime = System.currentTimeMillis() - start;
+
+        System.out.println("Database query time: " + databaseQueryTime);
+
+        start = System.currentTimeMillis();
+        mockMvc.perform(get("/api/recipe?sortBy=CALORIES&sortDirection=ASC&limit=5"));
+        long cacheQueryTime = System.currentTimeMillis() - start;
+
+        System.out.println("Cache query time: " + cacheQueryTime);
+
+        assertThat(cacheQueryTime).isLessThan(databaseQueryTime);
     }
 
    @Test

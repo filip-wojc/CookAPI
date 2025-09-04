@@ -5,9 +5,12 @@ import com.springtest.cookapi.domain.dtos.review.ReviewDto;
 import com.springtest.cookapi.domain.entities.Recipe;
 import com.springtest.cookapi.domain.entities.Review;
 import com.springtest.cookapi.domain.entities.User;
+import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.domain.exceptions.ForbiddenException;
 import com.springtest.cookapi.domain.exceptions.NotFoundException;
 import com.springtest.cookapi.domain.mappers.ReviewMapper;
+import com.springtest.cookapi.domain.requests.GetReviewsRequest;
+import com.springtest.cookapi.domain.responses.PageResponse;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.ReviewRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
@@ -16,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +37,7 @@ public class ReviewServiceImpl implements IReviewService {
     private final CurrentUserService currentUserService;
     @Override
     @CacheEvict(value = "all-reviews", allEntries = true)
-    public void addReview(CreateReviewDto createReviewDto, Long recipeId) {
+    public ReviewDto addReview(CreateReviewDto createReviewDto, Long recipeId) {
         var recipe = getRecipeById(recipeId);
 
         var currentUserId = currentUserService.getCurrentUserId();
@@ -51,16 +56,26 @@ public class ReviewServiceImpl implements IReviewService {
         reviewToAdd.setRecipe(recipe);
         reviewToAdd.setUser(currentUser);
 
-        reviewRepository.save(reviewToAdd);
+        var addedReview = reviewRepository.save(reviewToAdd);
+        return reviewMapper.toReviewDto(addedReview);
     }
 
     @Override
     @Cacheable(value = "all-reviews", key = "'reviews' + #recipeId")
-    public List<ReviewDto> getReviews(Long recipeId) {
+    public PageResponse<ReviewDto> getReviews(Long recipeId, GetReviewsRequest getReviewsRequest) {
         var recipe = getRecipeById(recipeId);
-        List<Review> reviews = reviewRepository.getReviewByRecipe(recipe);
 
-        return reviews.stream().map(reviewMapper::toReviewDto).collect(Collectors.toList());
+        Sort.Direction sortDirection = getReviewsRequest.sortDirection() == SortDirection.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String sortBy = "rating";
+
+        PageRequest pageRequest = PageRequest.of(
+                getReviewsRequest.limit(),
+                getReviewsRequest.pageNumber(),
+                Sort.by(sortDirection, sortBy)
+        );
+
+        var reviews = reviewRepository.findByRecipe(recipe, pageRequest);
+        return PageResponse.of(reviews.map(reviewMapper::toReviewDto));
     }
 
     @Override

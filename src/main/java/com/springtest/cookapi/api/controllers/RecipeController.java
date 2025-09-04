@@ -6,12 +6,14 @@ import com.springtest.cookapi.domain.dtos.recipe.UpdateRecipeDto;
 import com.springtest.cookapi.domain.enums.SortBy;
 import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.domain.requests.GetRecipesRequest;
+import com.springtest.cookapi.domain.responses.PageResponse;
 import com.springtest.cookapi.infrastructure.services.recipe.IRecipeService;
 import com.springtest.cookapi.infrastructure.services.recipe.RecipeServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -27,8 +29,8 @@ public class RecipeController {
     private final IRecipeService recipeService;
 
     @GetMapping
-    public ResponseEntity<List<RecipeDto>> getAllRecipes(@RequestParam SortBy sortBy, @RequestParam SortDirection sortDirection, @RequestParam @Min(1) @Max(50) Integer limit) {
-        return ResponseEntity.ok(recipeService.getAllRecipes(new GetRecipesRequest(sortBy, sortDirection, limit)));
+    public ResponseEntity<PageResponse<RecipeDto>> getAllRecipes(@RequestParam SortBy sortBy, @RequestParam SortDirection sortDirection, @RequestParam @Min(1) @Max(50) Integer limit, @RequestParam @Min(0) Integer pageNumber) {
+        return ResponseEntity.ok(recipeService.getAllRecipes(new GetRecipesRequest(sortBy, sortDirection, limit, pageNumber)));
     }
 
     @GetMapping("/{id}")

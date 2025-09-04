@@ -14,6 +14,7 @@ import com.springtest.cookapi.domain.exceptions.NotFoundException;
 import com.springtest.cookapi.domain.mappers.ProductMapper;
 import com.springtest.cookapi.domain.mappers.RecipeMapper;
 import com.springtest.cookapi.domain.requests.GetRecipesRequest;
+import com.springtest.cookapi.domain.responses.PageResponse;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -83,19 +85,19 @@ public class RecipeServiceImpl implements IRecipeService{
 
     @Override
     @Cacheable(value = "all-recipes", key = "#getRecipesRequest.toString()")
-    public List<RecipeDto> getAllRecipes(GetRecipesRequest  getRecipesRequest) {
+    public PageResponse<RecipeDto> getAllRecipes(GetRecipesRequest  getRecipesRequest) {
 
         Sort.Direction sortDirection = getRecipesRequest.sortDirection() == SortDirection.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
         String sortBy = getSortBy(getRecipesRequest.sortBy());
 
         PageRequest pageRequest = PageRequest.of(
-                0,
                 getRecipesRequest.limit(),
+                getRecipesRequest.pageNumber(),
                 Sort.by(sortDirection, sortBy)
         );
 
         var recipes = recipeRepository.findAll(pageRequest);
-        return recipes.stream().map(recipeMapper::toRecipeDto).collect(Collectors.toList());
+        return PageResponse.of(recipes.map(recipeMapper::toRecipeDto));
     }
 
     @Override

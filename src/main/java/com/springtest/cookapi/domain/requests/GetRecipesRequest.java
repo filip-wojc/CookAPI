@@ -6,6 +6,7 @@ import com.springtest.cookapi.domain.enums.SortDirection;
 public record GetRecipesRequest (
     SortBy sortBy,
     SortDirection sortDirection,
+    Integer pageNumber,
     Integer limit
 ){
     public GetRecipesRequest {
@@ -15,6 +16,9 @@ public record GetRecipesRequest (
         if (sortDirection == null) {
             sortDirection = SortDirection.ASC;
         }
+        if (pageNumber == null) {
+            pageNumber = 0;
+        }
         if (limit == null) {
             limit = 10;
         }
@@ -22,6 +26,6 @@ public record GetRecipesRequest (
 
     public String toString()
     {
-        return sortBy.toString() + " " + sortDirection.toString() + " " + limit;
+        return sortBy.toString() + " " + sortDirection.toString() + " " + limit + " " + pageNumber;
     }
 }

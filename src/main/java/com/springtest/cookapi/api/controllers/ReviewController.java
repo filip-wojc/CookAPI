@@ -2,12 +2,19 @@ package com.springtest.cookapi.api.controllers;
 
 import com.springtest.cookapi.domain.dtos.review.CreateReviewDto;
 import com.springtest.cookapi.domain.dtos.review.ReviewDto;
+import com.springtest.cookapi.domain.enums.SortDirection;
+import com.springtest.cookapi.domain.requests.GetReviewsRequest;
+import com.springtest.cookapi.domain.responses.PageResponse;
 import com.springtest.cookapi.infrastructure.services.review.IReviewService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -17,16 +24,23 @@ public class ReviewController {
     private final IReviewService reviewService;
 
     @PostMapping("/recipe/{recipeId}")
-    public ResponseEntity<String> addReview(
+    public ResponseEntity<ReviewDto> addReview(
             @Valid @RequestBody CreateReviewDto createReviewDto,
             @PathVariable Long recipeId) {
-        reviewService.addReview(createReviewDto, recipeId);
-        return ResponseEntity.ok("Review added successfully");
+        var addedReview = reviewService.addReview(createReviewDto, recipeId);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("api/review/{reviewId}")
+                .buildAndExpand(addedReview.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(addedReview);
     }
 
     @GetMapping("/recipe/{recipeId}")
-    public ResponseEntity<List<ReviewDto>> getReviews(@PathVariable Long recipeId) {
-        return ResponseEntity.ok(reviewService.getReviews(recipeId));
+    public ResponseEntity<PageResponse<ReviewDto>> getReviews(@PathVariable Long recipeId, @RequestParam SortDirection sortDirection, @RequestParam @Min(1) @Max(50) Integer limit, @RequestParam @Min(0) Integer pageNumber) {
+        return ResponseEntity.ok(reviewService.getReviews(recipeId, new GetReviewsRequest(sortDirection, limit, pageNumber)));
     }
 
     @GetMapping("/{reviewId}")

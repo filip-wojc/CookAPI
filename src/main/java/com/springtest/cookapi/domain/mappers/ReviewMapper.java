@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class ReviewMapper {
-    private final RecipeMapper recipeMapper;
     private final UserMapper userMapper;
     public ReviewDto toReviewDto(Review review) {
         return new ReviewDto(
@@ -18,7 +17,7 @@ public class ReviewMapper {
                 review.getReviewContent(),
                 review.getRating(),
                 userMapper.toUserDto(review.getUser()),
-                recipeMapper.toRecipeDto(review.getRecipe())
+                review.getRecipe().getId()
         );
     }
 
