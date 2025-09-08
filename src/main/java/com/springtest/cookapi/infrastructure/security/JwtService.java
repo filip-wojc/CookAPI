@@ -1,6 +1,6 @@
 package com.springtest.cookapi.infrastructure.security;
 
-import com.springtest.cookapi.domain.responses.TokenPair;
+import com.springtest.cookapi.domain.responses.LoginResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -101,6 +101,15 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    public Date extractExpirationDateFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+    }
     public String extractUsernameFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
@@ -120,9 +129,11 @@ public class JwtService {
         return Long.valueOf(idClaim.toString());
     }
 
-    public TokenPair generateTokenPair(Authentication authentication, Long userId) {
+    public LoginResponse generateTokenPair(Authentication authentication, Long userId) {
         String accessToken = generateAccessToken(authentication, userId);
         String refreshToken = generateRefreshToken(authentication, userId);
-        return new TokenPair(accessToken, refreshToken);
+        Date expirationDate = extractExpirationDateFromToken(accessToken);
+        Date refreshExpirationDate = extractExpirationDateFromToken(refreshToken);
+        return new LoginResponse(userId, accessToken, refreshToken, expirationDate, refreshExpirationDate);
     }
 }

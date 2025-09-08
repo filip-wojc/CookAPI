@@ -5,7 +5,7 @@ import com.springtest.cookapi.domain.enums.Role;
 import com.springtest.cookapi.domain.requests.LoginRequest;
 import com.springtest.cookapi.domain.requests.RefreshTokenRequest;
 import com.springtest.cookapi.domain.requests.RegisterRequest;
-import com.springtest.cookapi.domain.responses.TokenPair;
+import com.springtest.cookapi.domain.responses.LoginResponse;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -18,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -46,7 +48,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public TokenPair login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -60,11 +62,11 @@ public class AuthService {
         Long userId = userDetails.getUserId();
 
 
-        TokenPair tokenPair = jwtService.generateTokenPair(authentication, userId);
-        return tokenPair;
+        LoginResponse loginResponse = jwtService.generateTokenPair(authentication, userId);
+        return loginResponse;
     }
 
-    public TokenPair refreshToken(RefreshTokenRequest refreshTokenRequest) {
+    public LoginResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
 
         String refreshToken = refreshTokenRequest.getRefreshToken();
 
@@ -83,7 +85,8 @@ public class AuthService {
         UsernamePasswordAuthenticationToken auth =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         String accessToken = jwtService.generateAccessToken(auth, userId);
-        return new TokenPair(accessToken, refreshToken);
+        Date expirationDate = jwtService.extractExpirationDateFromToken(accessToken);
+        Date refreshExpirationDate = jwtService.extractExpirationDateFromToken(refreshToken);
+        return new LoginResponse(userId, accessToken, refreshToken, expirationDate, refreshExpirationDate);
     }
-
 }
