@@ -19,6 +19,7 @@ import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
 import com.springtest.cookapi.infrastructure.services.CurrentUserService;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,7 +29,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,11 +47,12 @@ public class RecipeServiceImpl implements IRecipeService{
     private final ProductMapper productMapper;
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
     @CacheEvict(value = "all-recipes", allEntries = true)
-    public RecipeDto addRecipe(CreateRecipeDto createRecipeDto) {
+    public RecipeDto addRecipe(CreateRecipeDto createRecipeDto, MultipartFile image) throws IOException {
         Recipe recipe = recipeMapper.toRecipe(createRecipeDto);
 
         var currentUserId = currentUserService.getCurrentUserId();
@@ -59,6 +63,16 @@ public class RecipeServiceImpl implements IRecipeService{
         List<Product> productsFromRecipe = recipe.getProductList();
         var products = addNotExistingProducts(productsFromRecipe);
         recipe.setProductList(products);
+
+        if (image != null) {
+            var uploadResult = cloudinaryService.AddImageToCloudinary(image);
+            String publicId = uploadResult.get("public_id").toString();
+            String imageUrl = uploadResult.get("secure_url").toString();
+
+            recipe.setPublicId(publicId);
+            recipe.setImageUrl(imageUrl);
+        }
+
         var savedRecipe = recipeRepository.save(recipe);
 
         return recipeMapper.toRecipeDto(savedRecipe);
@@ -70,8 +84,9 @@ public class RecipeServiceImpl implements IRecipeService{
             @CacheEvict(value = "all-recipes", allEntries = true),
             @CacheEvict(value = "recipe", key = "'recipe_' + #recipeId.toString()")
     })
-    public void deleteRecipe(Long recipeId) {
+    public void deleteRecipe(Long recipeId) throws IOException {
         var recipeToDelete = getRecipeById(recipeId);
+        String publicId = recipeToDelete.getPublicId();
 
         var currentUserId = currentUserService.getCurrentUserId();
         if (!currentUserId.equals(recipeToDelete.getUser().getId())) {
@@ -79,6 +94,7 @@ public class RecipeServiceImpl implements IRecipeService{
         }
 
         recipeRepository.deleteById(recipeId);
+        cloudinaryService.DeleteImageFromCloudinary(publicId);
     }
 
 
@@ -106,7 +122,7 @@ public class RecipeServiceImpl implements IRecipeService{
             @CacheEvict(value = "all-recipes", allEntries = true),
             @CacheEvict(value = "recipe", key = "'recipe_' + #recipeId.toString()")
     })
-    public RecipeDto updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto) {
+    public RecipeDto updateRecipe(Long recipeId, UpdateRecipeDto updateRecipeDto, MultipartFile image) throws IOException {
         var recipeToModify = getRecipeById(recipeId);
 
         var currentUserId = currentUserService.getCurrentUserId();
@@ -130,6 +146,18 @@ public class RecipeServiceImpl implements IRecipeService{
             var products = updateRecipeDto.products().stream().map(productMapper::toEntity).collect(Collectors.toList());
             var managedProducts = addNotExistingProducts(products);
             recipeToModify.setProductList(managedProducts);
+        }
+
+        if (image != null) {
+            if (recipeToModify.getPublicId() != null) {
+                cloudinaryService.DeleteImageFromCloudinary(recipeToModify.getPublicId());
+            }
+            var uploadResult = cloudinaryService.AddImageToCloudinary(image);
+            String publicId = uploadResult.get("public_id").toString();
+            String imageUrl = uploadResult.get("secure_url").toString();
+
+            recipeToModify.setPublicId(publicId);
+            recipeToModify.setImageUrl(imageUrl);
         }
 
         var savedRecipe = recipeRepository.save(recipeToModify);

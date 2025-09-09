@@ -13,6 +13,7 @@ public record RecipeDto (
     String description,
     String difficulty,
     Double calories,
+    String imageUrl,
     List<ProductDto> products,
     UserDto author
 ) implements Serializable{

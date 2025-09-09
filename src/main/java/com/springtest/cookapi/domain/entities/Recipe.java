@@ -30,6 +30,12 @@ public class Recipe {
     @Column(nullable = false)
     private Double calories;
 
+    @Column
+    private String imageUrl;
+
+    @Column
+    private String publicId;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "recipe_products",

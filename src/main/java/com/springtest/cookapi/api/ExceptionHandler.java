@@ -1,9 +1,9 @@
 package com.springtest.cookapi.api;
 
+import com.springtest.cookapi.domain.exceptions.*;
 import com.springtest.cookapi.domain.responses.ExceptionResponse;
-import com.springtest.cookapi.domain.exceptions.ForbiddenException;
-import com.springtest.cookapi.domain.exceptions.NotFoundException;
-import com.springtest.cookapi.domain.exceptions.UnauthorizedException;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -33,6 +33,18 @@ public class ExceptionHandler {
     public ResponseEntity<ExceptionResponse> handleForbidden(ForbiddenException ex) {
         var response = new ExceptionResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleBadRequest(BadRequestException ex) {
+        var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ExceptionResponse> handleConstraintValidation(ConstraintViolationException ex) {
+        var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
