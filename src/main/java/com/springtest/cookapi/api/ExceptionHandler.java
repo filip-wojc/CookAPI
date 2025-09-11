@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 @ControllerAdvice
 public class ExceptionHandler {
@@ -43,6 +44,12 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ExceptionResponse> handleConstraintValidation(ConstraintViolationException ex) {
+        var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ExceptionResponse> handleMethodValidation(HandlerMethodValidationException ex) {
         var response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }

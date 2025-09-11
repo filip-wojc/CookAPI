@@ -14,6 +14,7 @@ import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.ReviewRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,8 +44,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestSecurityConfig.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "app.cloudinary.url=cloudinary://fake_key:$fake_secret@fake_cloud"
+})
+@Import({TestSecurityConfig.class, TestCloudinaryConfig.class})
 @Transactional
 @Rollback
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -65,6 +68,8 @@ public class ReviewControllerTest {
     ObjectMapper objectMapper;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    CloudinaryService cloudinaryService;
 
     static UserRepository staticUserRepository;
     static RecipeRepository staticRecipeRepository;

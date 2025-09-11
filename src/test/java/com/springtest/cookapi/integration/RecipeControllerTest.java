@@ -14,6 +14,7 @@ import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +27,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,8 +48,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestSecurityConfig.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "app.cloudinary.url=cloudinary://fake_key:$fake_secret@fake_cloud"
+})
+@Import({TestSecurityConfig.class, TestCloudinaryConfig.class})
 @Transactional
 @Rollback
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -68,6 +72,8 @@ public class RecipeControllerTest {
     ObjectMapper objectMapper;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    CloudinaryService cloudinaryService;
 
     static UserRepository staticUserRepository;
     static RecipeRepository staticRecipeRepository;
@@ -102,11 +108,11 @@ public class RecipeControllerTest {
     @Test
     void getAllRecipesShouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/recipe")
-                .param("sortBy", SortBy.CALORIES.toString())
-                .param("sortDirection", SortDirection.ASC.toString())
-                .param("limit", "5")
+                        .param("sortBy", SortBy.CALORIES.toString())
+                        .param("sortDirection", SortDirection.ASC.toString())
+                        .param("limit", "5")
                         .param("pageNumber", "0")
-        )
+                )
                 .andExpect(status().isOk());
     }
 
@@ -172,9 +178,25 @@ public class RecipeControllerTest {
         );
         var createRecipeDto = new CreateRecipeDto("test1", "test_d1", Difficulty.MEDIUM, 200d, createProductsDto);
 
-        mockMvc.perform(post("/api/recipe")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createRecipeDto))
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "createRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(createRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+
+        mockMvc.perform(multipart("/api/recipe")
+                .file(recipeData)
+                .file(imageFile)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
         ).andExpect(status().isCreated());
 
         assertThat(stringRedisTemplate.hasKey(cacheKey)).isFalse();
@@ -218,8 +240,8 @@ public class RecipeControllerTest {
         assertThat(cacheQueryTime).isLessThan(databaseQueryTime);
     }
 
-   @Test
-   void getRecipeByIdShouldReturnOk() throws Exception {
+    @Test
+    void getRecipeByIdShouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/recipe/{id}", savedRecipeIds.get(0)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("recipe1")))
@@ -227,7 +249,7 @@ public class RecipeControllerTest {
                 .andExpect(jsonPath("$.difficulty", is(Difficulty.EASY.toString())))
                 .andExpect(jsonPath("$.calories", is(200d)))
                 .andExpect(jsonPath("$.products", hasSize(2)));
-   }
+    }
 
     @Test
     void getRecipeByIdShouldReturnNotFound() throws Exception {
@@ -237,20 +259,37 @@ public class RecipeControllerTest {
 
     @Test
     @WithUserDetails("test_user")
-    void addRecipeShouldReturnOk() throws Exception {
+    void addRecipeShouldReturnCreated() throws Exception {
         var createProductsDto = List.of(
                 new CreateProductDto("test_pro1"),
                 new CreateProductDto("test_pro2"),
                 new CreateProductDto("test_pro3")
         );
         var createRecipeDto = new CreateRecipeDto("test1", "test_d1", Difficulty.MEDIUM, 200d, createProductsDto);
-        mockMvc.perform(post("/api/recipe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRecipeDto)))
+
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "createRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(createRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/recipe")
+                        .file(recipeData)
+                        .file(imageFile)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is("test1")))
                 .andExpect(jsonPath("$.products[0].name", is("test_pro1")))
-                .andExpect(jsonPath("$.author.username", is("test_user")));
+                .andExpect(jsonPath("$.author.username", is("test_user")))
+                .andExpect(jsonPath("$.imageUrl", is("https://test-cloudinary.com/test-image.jpg")));
     }
 
     @Test
@@ -263,9 +302,24 @@ public class RecipeControllerTest {
         );
         var createRecipeDto = new CreateRecipeDto("", "test_d1", Difficulty.MEDIUM, 200d, createProductsDto);
 
-        mockMvc.perform(post("/api/recipe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRecipeDto)))
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "createRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(createRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/recipe")
+                        .file(recipeData)
+                        .file(imageFile)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest());
     }
 
@@ -300,14 +354,35 @@ public class RecipeControllerTest {
         );
         var updateRecipeDto = new UpdateRecipeDto("recipe1_updated", "recipe1_desc_updated", Difficulty.HARD, 2000d, createProductsDto);
 
-        mockMvc.perform(put("/api/recipe/{id}", savedRecipeIds.get(0))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRecipeDto)))
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "updateRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(updateRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/recipe/{id}", savedRecipeIds.get(0))
+                        .file(recipeData)
+                        .file(imageFile)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("recipe1_updated")))
                 .andExpect(jsonPath("$.description", is("recipe1_desc_updated")))
                 .andExpect(jsonPath("$.difficulty", is(Difficulty.HARD.toString())))
-                .andExpect(jsonPath("$.calories", is(2000d)));
+                .andExpect(jsonPath("$.calories", is(2000d)))
+                .andExpect(jsonPath("$.products", hasSize(3)))
+                .andExpect(jsonPath("$.imageUrl", is("https://test-cloudinary.com/test-image.jpg")));
     }
 
     @Test
@@ -320,9 +395,28 @@ public class RecipeControllerTest {
         );
         var updateRecipeDto = new UpdateRecipeDto("recipe1_updated", "recipe1_desc_updated", Difficulty.HARD, 2000d, createProductsDto);
 
-        mockMvc.perform(put("/api/recipe/{id}", savedRecipeIds.get(4))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRecipeDto)))
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "updateRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(updateRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/recipe/{id}", savedRecipeIds.get(4))
+                        .file(recipeData)
+                        .file(imageFile)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isForbidden());
     }
 
@@ -336,9 +430,28 @@ public class RecipeControllerTest {
         );
         var updateRecipeDto = new UpdateRecipeDto("recipe1_updated", "recipe1_desc_updated", Difficulty.HARD, 2000d, createProductsDto);
 
-        mockMvc.perform(put("/api/recipe/{id}", savedRecipeIds.get(0) + 100l)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRecipeDto)))
+        MockMultipartFile recipeData = new MockMultipartFile(
+                "updateRecipeDto",
+                "",
+                "application/json",
+                objectMapper.writeValueAsString(updateRecipeDto).getBytes()
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/recipe/{id}", savedRecipeIds.get(0) + 100l)
+                        .file(recipeData)
+                        .file(imageFile)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isNotFound());
     }
 
