@@ -2,7 +2,6 @@ package com.springtest.cookapi.api;
 
 import com.springtest.cookapi.domain.exceptions.*;
 import com.springtest.cookapi.domain.responses.ExceptionResponse;
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

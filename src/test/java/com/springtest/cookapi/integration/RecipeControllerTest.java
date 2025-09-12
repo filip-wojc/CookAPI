@@ -14,9 +14,9 @@ import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryServiceImpl;
+import com.springtest.cookapi.infrastructure.services.cloudinary.ICloudinaryService;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +72,7 @@ public class RecipeControllerTest {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
     @Autowired
-    CloudinaryService cloudinaryService;
+    ICloudinaryService cloudinaryService;
 
     static UserRepository staticUserRepository;
     static RecipeRepository staticRecipeRepository;

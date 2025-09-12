@@ -1,6 +1,6 @@
 package com.springtest.cookapi.integration;
 
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
+import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryServiceImpl;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -22,18 +22,18 @@ public class TestCloudinaryConfig {
 
     @Bean
     @Primary
-    public CloudinaryService mockCloudinaryService() {
-        CloudinaryService mockService = Mockito.mock(CloudinaryService.class);
+    public CloudinaryServiceImpl mockCloudinaryService() {
+        CloudinaryServiceImpl mockService = Mockito.mock(CloudinaryServiceImpl.class);
         Map<String, String> uploadResultMock = new HashMap<>();
 
         uploadResultMock.put("public_id", "test_image_123");
         uploadResultMock.put("secure_url", "https://test-cloudinary.com/test-image.jpg");
 
         try {
-            when(mockService.AddImageToCloudinary(any(MultipartFile.class)))
+            when(mockService.addImageToCloudinary(any(MultipartFile.class)))
                     .thenReturn(uploadResultMock);
 
-            doNothing().when(mockService).DeleteImageFromCloudinary(anyString());
+            doNothing().when(mockService).deleteImageFromCloudinary(anyString());
 
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -7,20 +7,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
 @Service
-public class CloudinaryService {
+public class CloudinaryServiceImpl implements ICloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    public CloudinaryService(@Value("${app.cloudinary.url}") String cloudinaryUrl) {
+    public CloudinaryServiceImpl(@Value("${app.cloudinary.url}") String cloudinaryUrl) {
         this.cloudinary = new Cloudinary(cloudinaryUrl);
     }
 
-    public Map AddImageToCloudinary(MultipartFile file) throws IOException {
+    public Map addImageToCloudinary(MultipartFile file) throws IOException {
         Map params1 = ObjectUtils.asMap(
                 "use_filename", true,
                 "unique_filename", true,
@@ -32,7 +31,7 @@ public class CloudinaryService {
         return cloudinary.uploader().upload(file.getBytes(), params1);
     }
 
-    public void DeleteImageFromCloudinary(String publicId) throws IOException {
+    public void deleteImageFromCloudinary(String publicId) throws IOException {
         if (publicId == null || publicId.trim().isEmpty()) {
             throw new IllegalArgumentException("PublicId nie może być pusty");
         }

@@ -19,13 +19,12 @@ import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
 import com.springtest.cookapi.infrastructure.services.CurrentUserService;
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
+import com.springtest.cookapi.infrastructure.services.cloudinary.ICloudinaryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -47,7 +46,7 @@ public class RecipeServiceImpl implements IRecipeService{
     private final ProductMapper productMapper;
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
-    private final CloudinaryService cloudinaryService;
+    private final ICloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -65,7 +64,7 @@ public class RecipeServiceImpl implements IRecipeService{
         recipe.setProductList(products);
 
         if (image != null) {
-            var uploadResult = cloudinaryService.AddImageToCloudinary(image);
+            var uploadResult = cloudinaryService.addImageToCloudinary(image);
             String publicId = uploadResult.get("public_id").toString();
             String imageUrl = uploadResult.get("secure_url").toString();
 
@@ -94,7 +93,7 @@ public class RecipeServiceImpl implements IRecipeService{
         }
 
         recipeRepository.deleteById(recipeId);
-        cloudinaryService.DeleteImageFromCloudinary(publicId);
+        cloudinaryService.deleteImageFromCloudinary(publicId);
     }
 
 
@@ -150,9 +149,9 @@ public class RecipeServiceImpl implements IRecipeService{
 
         if (image != null) {
             if (recipeToModify.getPublicId() != null) {
-                cloudinaryService.DeleteImageFromCloudinary(recipeToModify.getPublicId());
+                cloudinaryService.deleteImageFromCloudinary(recipeToModify.getPublicId());
             }
-            var uploadResult = cloudinaryService.AddImageToCloudinary(image);
+            var uploadResult = cloudinaryService.addImageToCloudinary(image);
             String publicId = uploadResult.get("public_id").toString();
             String imageUrl = uploadResult.get("secure_url").toString();
 

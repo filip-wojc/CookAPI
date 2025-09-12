@@ -1,8 +1,6 @@
 package com.springtest.cookapi.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.springtest.cookapi.domain.dtos.product.CreateProductDto;
-import com.springtest.cookapi.domain.dtos.recipe.CreateRecipeDto;
 import com.springtest.cookapi.domain.dtos.review.CreateReviewDto;
 import com.springtest.cookapi.domain.entities.Product;
 import com.springtest.cookapi.domain.entities.Recipe;
@@ -14,7 +12,7 @@ import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.ReviewRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryService;
+import com.springtest.cookapi.infrastructure.services.cloudinary.ICloudinaryService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -69,7 +67,7 @@ public class ReviewControllerTest {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
     @Autowired
-    CloudinaryService cloudinaryService;
+    ICloudinaryService cloudinaryService;
 
     static UserRepository staticUserRepository;
     static RecipeRepository staticRecipeRepository;
