@@ -14,7 +14,6 @@ import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.infrastructure.repositories.ProductRepository;
 import com.springtest.cookapi.infrastructure.repositories.RecipeRepository;
 import com.springtest.cookapi.infrastructure.repositories.UserRepository;
-import com.springtest.cookapi.infrastructure.services.cloudinary.CloudinaryServiceImpl;
 import com.springtest.cookapi.infrastructure.services.cloudinary.ICloudinaryService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;

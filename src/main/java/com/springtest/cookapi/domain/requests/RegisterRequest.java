@@ -1,6 +1,5 @@
 package com.springtest.cookapi.domain.requests;
 
-import com.springtest.cookapi.domain.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

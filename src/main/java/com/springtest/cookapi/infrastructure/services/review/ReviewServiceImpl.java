@@ -3,7 +3,6 @@ package com.springtest.cookapi.infrastructure.services.review;
 import com.springtest.cookapi.domain.dtos.review.CreateReviewDto;
 import com.springtest.cookapi.domain.dtos.review.ReviewDto;
 import com.springtest.cookapi.domain.entities.Recipe;
-import com.springtest.cookapi.domain.entities.Review;
 import com.springtest.cookapi.domain.entities.User;
 import com.springtest.cookapi.domain.enums.SortDirection;
 import com.springtest.cookapi.domain.exceptions.ForbiddenException;
@@ -23,7 +22,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 

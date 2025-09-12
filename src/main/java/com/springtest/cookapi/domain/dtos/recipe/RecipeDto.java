@@ -2,7 +2,6 @@ package com.springtest.cookapi.domain.dtos.recipe;
 
 import com.springtest.cookapi.domain.dtos.product.ProductDto;
 import com.springtest.cookapi.domain.dtos.user.UserDto;
-import com.springtest.cookapi.domain.entities.Review;
 
 import java.io.Serializable;
 import java.util.List;

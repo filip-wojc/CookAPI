@@ -1,11 +1,8 @@
 package com.springtest.cookapi.domain.dtos.recipe;
 
 import com.springtest.cookapi.domain.dtos.product.CreateProductDto;
-import com.springtest.cookapi.domain.dtos.product.ProductDto;
 import com.springtest.cookapi.domain.enums.Difficulty;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

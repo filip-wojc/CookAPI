@@ -1,6 +1,9 @@
 package com.springtest.cookapi.api;
 
-import com.springtest.cookapi.domain.exceptions.*;
+import com.springtest.cookapi.domain.exceptions.BadRequestException;
+import com.springtest.cookapi.domain.exceptions.ForbiddenException;
+import com.springtest.cookapi.domain.exceptions.NotFoundException;
+import com.springtest.cookapi.domain.exceptions.UnauthorizedException;
 import com.springtest.cookapi.domain.responses.ExceptionResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

@@ -5,8 +5,6 @@ import com.springtest.cookapi.domain.dtos.review.ReviewDto;
 import com.springtest.cookapi.domain.requests.GetReviewsRequest;
 import com.springtest.cookapi.domain.responses.PageResponse;
 
-import java.util.List;
-
 public interface IReviewService {
     ReviewDto addReview(CreateReviewDto createReviewDto, Long recipeId);
     PageResponse<ReviewDto> getReviews(Long recipeId, GetReviewsRequest getReviewsRequest);
