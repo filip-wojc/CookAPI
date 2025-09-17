@@ -91,8 +91,11 @@ public class AuthService {
         UsernamePasswordAuthenticationToken auth =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         String accessToken = jwtService.generateAccessToken(auth, userId);
+        String newRefreshToken = jwtService.generateRefreshToken(auth, userId);
+
         Date expirationDate = jwtService.extractExpirationDateFromToken(accessToken);
-        Date refreshExpirationDate = jwtService.extractExpirationDateFromToken(refreshToken);
+        Date refreshExpirationDate = jwtService.extractExpirationDateFromToken(newRefreshToken);
+
         return new LoginResponse(userId, accessToken, refreshToken, expirationDate, refreshExpirationDate);
     }
 }
