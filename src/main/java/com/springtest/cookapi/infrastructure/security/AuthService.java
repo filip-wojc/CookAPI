@@ -2,6 +2,7 @@ package com.springtest.cookapi.infrastructure.security;
 
 import com.springtest.cookapi.domain.entities.User;
 import com.springtest.cookapi.domain.enums.Role;
+import com.springtest.cookapi.domain.exceptions.BadRequestException;
 import com.springtest.cookapi.domain.requests.LoginRequest;
 import com.springtest.cookapi.domain.requests.RefreshTokenRequest;
 import com.springtest.cookapi.domain.requests.RegisterRequest;
@@ -49,21 +50,26 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Long userId = userDetails.getUserId();
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = userDetails.getUserId();
 
 
-        LoginResponse loginResponse = jwtService.generateTokenPair(authentication, userId);
-        return loginResponse;
+            LoginResponse loginResponse = jwtService.generateTokenPair(authentication, userId);
+            return loginResponse;
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid username or password");
+        }
+
     }
 
     public LoginResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
