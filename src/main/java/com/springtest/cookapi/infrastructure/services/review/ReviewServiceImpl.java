@@ -55,6 +55,9 @@ public class ReviewServiceImpl implements IReviewService {
         reviewToAdd.setUser(currentUser);
 
         var addedReview = reviewRepository.save(reviewToAdd);
+
+        setRecipeRating(recipe);
+
         return reviewMapper.toReviewDto(addedReview);
     }
 
@@ -96,7 +99,9 @@ public class ReviewServiceImpl implements IReviewService {
             throw new ForbiddenException("You are not allowed to delete this review");
         }
 
+        var recipe = reviewToDelete.getRecipe();
         reviewRepository.deleteById(reviewId);
+        setRecipeRating(recipe);
     }
 
     private Recipe getRecipeById(Long recipeId) throws NotFoundException {
@@ -105,5 +110,17 @@ public class ReviewServiceImpl implements IReviewService {
             throw new NotFoundException("Recipe with id " + recipeId + " not found");
         }
         return recipe.get();
+    }
+
+    private void setRecipeRating(Recipe recipe) {
+        var allReviews = reviewRepository.findByRecipe(recipe);
+        if (allReviews.isEmpty()) {
+            recipe.setRating(null);
+        }
+        else {
+            Double rating = allReviews.stream().mapToDouble(review -> review.getRating()).average().orElse(0.0);
+            recipe.setRating(rating);
+        }
+        recipeRepository.save(recipe);
     }
 }

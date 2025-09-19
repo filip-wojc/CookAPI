@@ -31,6 +31,9 @@ public class Recipe {
     private Double calories;
 
     @Column
+    private Double rating;
+
+    @Column
     private String imageUrl;
 
     @Column

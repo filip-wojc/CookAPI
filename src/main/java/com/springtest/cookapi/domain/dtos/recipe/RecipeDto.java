@@ -12,6 +12,7 @@ public record RecipeDto (
     String description,
     String difficulty,
     Double calories,
+    Double rating,
     String imageUrl,
     List<ProductDto> products,
     UserDto author

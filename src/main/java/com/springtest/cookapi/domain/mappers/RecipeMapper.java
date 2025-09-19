@@ -23,6 +23,7 @@ public class RecipeMapper {
                 dto.calories(),
                 null,
                 null,
+                null,
                 dto.products().stream().map(productMapper::toEntity).toList(),
                 new ArrayList<>(),
                 null
@@ -36,6 +37,7 @@ public class RecipeMapper {
                 recipe.getDescription(),
                 recipe.getDifficulty().toString(),
                 recipe.getCalories(),
+                recipe.getRating(),
                 recipe.getImageUrl(),
                 recipe.getProductList().stream().map(productMapper::toDto).toList(),
                 userMapper.toUserDto(recipe.getUser())
