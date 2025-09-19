@@ -86,7 +86,7 @@ public class RecipeMapperTest {
 
         Recipe recipe = new Recipe(
                 1L, "Test Recipe", "Description", Difficulty.HARD, 300.0,
-                null, null,
+                null, null,null,
                 products, new ArrayList<>(), user
         );
 

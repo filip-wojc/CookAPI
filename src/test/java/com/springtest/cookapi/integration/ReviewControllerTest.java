@@ -315,11 +315,11 @@ public class ReviewControllerTest {
         Product product4 = products.get(3);
 
         var recipes = List.of(
-                new Recipe(null, "recipe1", "recipe1_desc", Difficulty.EASY, 200d,null, null, List.of(product1, product2), null, user1),
-                new Recipe(null, "recipe2", "recipe2_desc", Difficulty.MEDIUM, 300d,null, null, List.of(product1, product2, product3), null, user1),
-                new Recipe(null, "recipe3", "recipe3_desc", Difficulty.MEDIUM, 250d,null, null, List.of(product2), null, user1),
-                new Recipe(null, "recipe4", "recipe4_desc", Difficulty.HARD, 600d,null, null, List.of(product4, product2, product1), null, user2),
-                new Recipe(null, "recipe5", "recipe5_desc", Difficulty.EASY, 150d,null, null, List.of(product3, product4), null, user2)
+                new Recipe(null, "recipe1", "recipe1_desc", Difficulty.EASY, 200d,null, null,null, List.of(product1, product2), null, user1),
+                new Recipe(null, "recipe2", "recipe2_desc", Difficulty.MEDIUM, 300d,null, null,null, List.of(product1, product2, product3), null, user1),
+                new Recipe(null, "recipe3", "recipe3_desc", Difficulty.MEDIUM, 250d,null, null,null, List.of(product2), null, user1),
+                new Recipe(null, "recipe4", "recipe4_desc", Difficulty.HARD, 600d,null, null,null, List.of(product4, product2, product1), null, user2),
+                new Recipe(null, "recipe5", "recipe5_desc", Difficulty.EASY, 150d,null, null,null, List.of(product3, product4), null, user2)
         );
 
         recipes = staticRecipeRepository.saveAllAndFlush(recipes);
