@@ -1,23 +1,23 @@
 package com.springtest.cookapi.api.controllers;
 
+import com.springtest.cookapi.domain.dtos.user.UserDto;
 import com.springtest.cookapi.domain.requests.LoginRequest;
 import com.springtest.cookapi.domain.requests.RefreshTokenRequest;
 import com.springtest.cookapi.domain.requests.RegisterRequest;
 import com.springtest.cookapi.domain.responses.LoginResponse;
 import com.springtest.cookapi.infrastructure.security.AuthService;
+import com.springtest.cookapi.infrastructure.services.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
@@ -37,5 +37,10 @@ public class AuthController {
         return ResponseEntity.ok(loginResponse);
     }
 
+    @GetMapping()
+    public ResponseEntity<?> getUser() {
+        var user = currentUserService.getCurrentUserDto();
+        return ResponseEntity.ok(user);
+    }
 
 }

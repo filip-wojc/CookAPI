@@ -1,5 +1,6 @@
 package com.springtest.cookapi.infrastructure.security;
 
+import com.springtest.cookapi.domain.dtos.user.UserDto;
 import com.springtest.cookapi.domain.entities.User;
 import com.springtest.cookapi.domain.enums.Role;
 import com.springtest.cookapi.domain.exceptions.BadRequestException;

@@ -34,7 +34,10 @@ public class ReviewServiceImpl implements IReviewService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     @Override
-    @CacheEvict(value = "all-reviews", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "all-reviews", allEntries = true),
+            @CacheEvict(value = "all-recipes", allEntries = true)
+    })
     public ReviewDto addReview(CreateReviewDto createReviewDto, Long recipeId) {
         var recipe = getRecipeById(recipeId);
 
@@ -89,7 +92,8 @@ public class ReviewServiceImpl implements IReviewService {
     @Override
     @Caching(evict = {
             @CacheEvict(value = "all-reviews", allEntries = true),
-            @CacheEvict(value = "review", key = "'review' + #reviewId")
+            @CacheEvict(value = "review", key = "'review' + #reviewId"),
+            @CacheEvict(value = "all-recipes", allEntries = true)
     })
     public void deleteReview(Long reviewId) {
         var reviewToDelete = reviewRepository.findById(reviewId).orElseThrow(() -> new NotFoundException("Review not found with ID: " + reviewId));
