@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class Recipe {
     private String name;
 
     @Column(nullable = false)
+    @Length(min = 1, max = 5000)
     private String description;
 
     @Column(nullable = false)

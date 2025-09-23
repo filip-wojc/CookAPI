@@ -93,7 +93,9 @@ public class RecipeServiceImpl implements IRecipeService{
         }
 
         recipeRepository.deleteById(recipeId);
-        cloudinaryService.deleteImageFromCloudinary(publicId);
+        if (publicId != null) {
+            cloudinaryService.deleteImageFromCloudinary(publicId);
+        }
     }
 
 
